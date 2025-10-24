@@ -1,0 +1,6 @@
+gymnasium[video]
+gymnasium[other]
+gymnasium[toy-text]
+numpy
+matplotlib
+imageio
