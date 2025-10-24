@@ -47,6 +47,7 @@ def train(env, agent : QLearningAgent, num_episodes=100000):
     return agent.Q, agent.rewards
 
 
+
 def eval_video(env, agent, video_save_path, num_videos):
     agent = copy.deepcopy(agent)
     agent.epsilon = 0.0
