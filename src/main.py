@@ -72,22 +72,27 @@ def eval_video(env, agent, video_save_path, num_videos):
 
 def main():
     args = parse_args()
-    os.makedirs(args.output, exist_ok=True)
-    # Get the absolute path to the project root (one level up from src/)
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-    # Save outputs in the top-level data/ folder
-    output_dir = os.path.join(project_root, "data")
+    # Create output directory
+    output_dir = args.output
     os.makedirs(output_dir, exist_ok=True)
 
-    # Default env: env = gym.make(args.env, render_mode="rgb_array")
-    #Adding custom environment
-    #L-shaped cliff (working)
-    custom_cliff = [(5, c) for c in range(1, 8)] + [(r, 7) for r in range(3, 6)]
-    
-    # Added custom cliff layout and time limit (working)
-    env = CustomCliffWalkingEnv(shape=(6, 15), render_mode="rgb_array")
+    # Default env
+    # env = gym.make(args.env, render_mode="rgb_array")
+
+    # Added custom cliff layout and step limit
+    # env = CustomCliffWalkingEnv(shape=(4, 12), render_mode="rgb_array")
+    env = CustomCliffWalkingEnv(shape=(4, 12), render_mode="ansi")
     env = gym.wrappers.TimeLimit(env, max_episode_steps=100)
+    state, info = env.reset()
+    
+    # Visualize the environment if render_mode is set to "rgb_array"
+    #frame = env.render()
+    #plt.imshow(frame)
+    #plt.axis("off")
+    #plt.show()
+
+    # Visualize the environment if render_mode is set to "ansi"
+    print(env.render())
 
     agent = QLearningAgent(
         env,
@@ -98,10 +103,14 @@ def main():
         min_eps=args.min_eps
     )
     Q, rewards = train(env, agent, num_episodes=args.num_episodes)
-    video_dir = os.path.join(args.output, "videos")
+    
+    video_dir = os.path.join(output_dir, "videos")
+    os.makedirs(video_dir, exist_ok=True)
+    
     eval_video(env, agent, video_dir, num_videos=args.num_videos)
     submit_video(video_dir)
-    plot_learning_curve(rewards, os.path.join(args.output, "plot.png"))
+    plot_learning_curve(rewards, os.path.join(output_dir, "plot.png"))
+    
     shutil.rmtree(video_dir)
     
 if __name__ == "__main__":
