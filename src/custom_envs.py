@@ -2,10 +2,10 @@ import numpy as np
 import gymnasium as gym
 from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 
-# 6x15 map, three straight vertical cliffs:
 # S = Start, G = Goal, C = Cliff
 # . = Safe floor
 # Change as needed for different layouts
+# Current layout: 6x15 map, three straight vertical cliffs
 ASCII_MAP = [
     ". . . . . . . C . . . . . . G",
     ". . . C . . . C . . . C . . .",
