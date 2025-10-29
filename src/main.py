@@ -73,6 +73,13 @@ def eval_video(env, agent, video_save_path, num_videos):
 def main():
     args = parse_args()
     os.makedirs(args.output, exist_ok=True)
+    # Get the absolute path to the project root (one level up from src/)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Save outputs in the top-level data/ folder
+    output_dir = os.path.join(project_root, "data")
+    os.makedirs(output_dir, exist_ok=True)
+
     # Default env: env = gym.make(args.env, render_mode="rgb_array")
     #Adding custom environment
     #L-shaped cliff (working)
@@ -81,7 +88,7 @@ def main():
     # Added custom cliff layout and time limit (working)
     env = CustomCliffWalkingEnv(shape=(6, 15), render_mode="rgb_array")
     env = gym.wrappers.TimeLimit(env, max_episode_steps=100)
-    
+
     agent = QLearningAgent(
         env,
         gamma=args.gamma,
