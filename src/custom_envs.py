@@ -5,15 +5,37 @@ from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 # S = Start, G = Goal, C = Cliff
 # . = Safe floor
 # Change as needed for different layouts
-# Current layout: 6x15 map, three straight vertical cliffs
+
+# Layout: Double-Whip Canyon (Working)
+# ASCII_MAP = [
+#     ".............G",
+#     ".CCC.....CCC..",
+#     ".C...CC....C..",
+#     ".C...CC....C..",
+#     ".C........C....",
+#     "S.............",
+# ]
+# Layout: Cliff Gauntlet (Good)
 ASCII_MAP = [
-    ". . . . . . . C . . . . . . G",
-    ". . . C . . . C . . . C . . .",
-    ". . . C . . . C . . . C . . .",
-    ". . . C . . . C . . . C . . .",
-    ". . . C . . . C . . . C . . .",
-    "S . . C . . . . . . . C . . .",
+    "G....CCCC....",
+    ".C...........",
+    ".CC...........",
+    ".C....CCC.....",
+    ".C...........",
+    "S............",
 ]
+
+# Layout: Temptation Loop (Working)
+# ASCII_MAP = [
+#     ".....G",
+#     ".CC.CC",
+#     ".C..C.",
+#     ".C..C.",
+#     ".CC..C",
+#     "S.....",
+# ]
+
+
 ASCII_MAP = [row.replace(" ", "") for row in ASCII_MAP]
 
 class CustomCliffWalkingEnv(CliffWalkingEnv):
