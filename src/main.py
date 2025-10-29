@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--decay-rate", type=float, default=0.9995)
     parser.add_argument("--min-eps", type=float, default=0.05)
     parser.add_argument("--env", type=str, default="CliffWalking-v1")
-    parser.add_argument("--num-episodes", type=int, default=80000)
+    parser.add_argument("--num-episodes", type=int, default=100000)
     parser.add_argument("--num-videos", type=int, default=1, help="# of videos to save")
     return parser.parse_args()
 
@@ -51,15 +51,12 @@ def train(env, agent : QLearningAgent, num_episodes=100000):
 def eval_video(env, agent, video_save_path, num_videos):
     agent = copy.deepcopy(agent)
     agent.epsilon = 0.0
-
-    from gymnasium.wrappers import RecordVideo
     venv = RecordVideo(
         env,
         video_folder=video_save_path,
         name_prefix="eval",
         episode_trigger=lambda ep: True,
     )
-
     for _ in range(num_videos):
         state, _ = venv.reset()
         terminated = truncated = False
@@ -81,8 +78,8 @@ def main():
     # env = gym.make(args.env, render_mode="rgb_array")
 
     # Added custom cliff layout and step limit
-    # env = CustomCliffWalkingEnv(shape=(4, 12), render_mode="rgb_array")
-    env = CustomCliffWalkingEnv(shape=(4, 12), render_mode="ansi")
+    env = CustomCliffWalkingEnv(render_mode="rgb_array")
+    # env = CustomCliffWalkingEnv(render_mode="ansi")
     env = gym.wrappers.TimeLimit(env, max_episode_steps=100)
     state, info = env.reset()
     
@@ -93,7 +90,7 @@ def main():
     #plt.show()
 
     # Visualize the environment if render_mode is set to "ansi"
-    print(env.render())
+    # print(env.render())
 
     agent = QLearningAgent(
         env,
@@ -109,11 +106,11 @@ def main():
     os.makedirs(video_dir, exist_ok=True)
     
     eval_video(env, agent, video_dir, num_videos=args.num_videos)
-    submit_video(video_dir)
     plot_learning_curve(rewards, os.path.join(output_dir, "plot.png"))
-    
-    shutil.rmtree(video_dir)
-    
+
+    print("\nEvaluation video saved to:", os.path.abspath(video_dir))
+    print("Learning curve saved to:", os.path.abspath(os.path.join(output_dir, 'plot.png')))
+        
 if __name__ == "__main__":
     main()
 

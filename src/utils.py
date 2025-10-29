@@ -7,7 +7,7 @@ import os
 def plot_learning_curve(rewards, save_path):
     plt.plot(np.convolve(rewards, np.ones(100)/100, mode='valid'))
     # Trim the y-axis to focus on relevant reward range
-    plt.ylim(-120, 0)
+    # plt.ylim(-120, 0)
     plt.xlabel("Episode")
     plt.ylabel("Average Reward (100-episode window)")
     # Change the plot title if necessary

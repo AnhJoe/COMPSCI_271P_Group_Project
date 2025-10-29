@@ -2,95 +2,123 @@ import numpy as np
 import gymnasium as gym
 from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 
+# 6x15 map, three straight vertical cliffs:
+# S = Start, G = Goal, C = Cliff
+# . = Safe floor
+# Change as needed for different layouts
+ASCII_MAP = [
+    ". . . . . . . C . . . . . . G",
+    ". . . C . . . C . . . C . . .",
+    ". . . C . . . C . . . C . . .",
+    ". . . C . . . C . . . C . . .",
+    ". . . C . . . C . . . C . . .",
+    "S . . C . . . . . . . C . . .",
+]
+ASCII_MAP = [row.replace(" ", "") for row in ASCII_MAP]
+
 class CustomCliffWalkingEnv(CliffWalkingEnv):
+    metadata = {"render_modes": ["rgb_array", "ansi"], "render_fps": 4}
 
-    def __init__(self, shape=(4, 12), cliff_coords=None, render_mode="rgb_array"):
+    def __init__(self, render_mode="rgb_array"):
         super().__init__(render_mode=render_mode)
-        self.shape = shape
-        nrow, ncol = self.shape
+        self.render_mode = render_mode
 
-        # Default L-shaped cliff if none custom provided
-        #(row_index, column_index)
-        #row_index = 0 at the top, nrow-1 at the bottom
-        #column_index = 0 at the left, ncol-1 at the right
-        
-        #Shift horizontal cliff up to row 2
-        #horiz = [(nrow - 2, c) for c in range(1, 8)]
+        # Parse map
+        self.rows = len(ASCII_MAP)
+        self.cols = len(ASCII_MAP[0])
 
+        self.cliff_coords = set()
+        self.start = None
+        self.goal = None
+        for r in range(self.rows):
+            for c in range(self.cols):
+                ch = ASCII_MAP[r][c]
+                if ch == "S":
+                    self.start = (r, c)
+                elif ch == "G":
+                    self.goal = (r, c)
+                elif ch == "C":
+                    self.cliff_coords.add((r, c))
+        if self.start is None or self.goal is None:
+            raise ValueError("ASCII_MAP must contain exactly one S and one G.")
 
-        #Move vertical cliff from (1,7) to (2,5)
-        #vert = [(r, 5) for r in range(nrow - 3, nrow)]
+        # Updated observation space to dynamically match custom map (not the base 4x12)
+        self.observation_space = gym.spaces.Discrete(self.rows * self.cols)
+        self.action_space = gym.spaces.Discrete(4)
 
-        if cliff_coords is None:
-            horiz = [(nrow - 1, c) for c in range(1, 8)]
-            vert = [(r, 7) for r in range(nrow - 3, nrow)]
-            self.cliff_coords = set(horiz + vert)
-        else:
-            self.cliff_coords = set(cliff_coords)
-        
-        # Create cliff boolean array
-        self._cliff = np.zeros((nrow, ncol), dtype=bool)
-        for r, c in self.cliff_coords:
-            self._cliff[r, c] = True
+        # Set initial state index
+        self.s = self.start[0] * self.cols + self.start[1]
 
-        self.start_state = (nrow - 1, 0)
-        self.goal_state = (0, ncol - 1)
-
-        self.nS = nrow * ncol
-        self.nA = 4
-
-        def to_state(r, c):
-            return r * ncol + c
-
-        self.P = {s: {a: [] for a in range(self.nA)} for s in range(self.nS)}
-
-        def next_state_reward_done(r, c, a):
-            if a == 0: r = max(r - 1, 0)
-            elif a == 1: c = min(c + 1, ncol - 1)
-            elif a == 2: r = min(r + 1, nrow - 1)
-            elif a == 3: c = max(c - 1, 0)
-
-            s2 = to_state(r, c)
-            goal = (r, c) == self.goal_state
-
-            if goal: reward, done = 0, True
-            elif (r, c) in self.cliff_coords:
-                reward, done = -100, True
-            else:
-                reward, done = -1, False
-
-            return s2, reward, done
-
-        for r in range(nrow):
-            for c in range(ncol):
-                s = to_state(r, c)
-                for a in range(self.nA):
-                    ns, rew, done = next_state_reward_done(r, c, a)
-                    self.P[s][a] = [(1.0, ns, rew, done)]
-
-        self.observation_space = gym.spaces.Discrete(self.nS)
-        self.action_space = gym.spaces.Discrete(self.nA)
-
-        self.s = to_state(*self.start_state)
+        # Colors for rgb render
+        self.cell = 50
+        self.color_floor = (220, 220, 220)
+        self.color_cliff = (60, 0, 0)
+        self.color_start = (0, 200, 0)
+        self.color_goal = (255, 215, 0)
+        self.color_agent = (0, 0, 255)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
-        nrow, ncol = self.shape
-        self.s = (nrow - 1) * ncol + 0
+        self.s = self.start[0] * self.cols + self.start[1]
         return self.s, {}
 
     def step(self, action):
-        transition = self.P[self.s][action][0]
-        _, s2, reward, done = transition
+        # Convert integer state to grid position
+        r, c = divmod(self.s, self.cols)
 
-        if reward == -100:
-            # Fall off cliff -> next timestep reset to start
-            self.s = (self.shape[0] - 1) * self.shape[1] + 0
-        else:
-            self.s = s2
+        # Movement logic
+        if action == 0:   # up
+            r -= 1
+        elif action == 1: # right
+            c += 1
+        elif action == 2: # down
+            r += 1
+        elif action == 3: # left
+            c -= 1
 
-        return self.s, reward, done, False, {}
-    
-    
+        # Clamp to edges
+        r = max(0, min(self.rows - 1, r))
+        c = max(0, min(self.cols - 1, c))
 
+        # Goal check
+        if (r, c) == self.goal:
+            self.s = r * self.cols + c
+            return self.s, 0, True, False, {}
+        # Cliff check
+        if (r, c) in self.cliff_coords:
+            self.s = self.start[0] * self.cols + self.start[1]
+            return self.s, -100, True, False, {}
+        
+        # Regular step
+        self.s = r * self.cols + c
+        return self.s, -1, False, False, {}
 
+    def render(self):
+        if self.render_mode == "ansi":
+            grid = [list(row) for row in ASCII_MAP]
+            ar, ac = divmod(self.s, self.cols)
+            if (ar, ac) not in self.cliff_coords and (ar, ac) != self.goal:
+                grid[ar][ac] = "A"
+            return "\n".join(" ".join(row) for row in grid)
+
+        # rgb_array
+        img = np.full((self.rows * self.cell, self.cols * self.cell, 3),
+                      self.color_floor, dtype=np.uint8)
+
+        # Cliffs
+        for r, c in self.cliff_coords:
+            img[r*self.cell:(r+1)*self.cell, c*self.cell:(c+1)*self.cell] = self.color_cliff
+
+        # Start
+        sr, sc = self.start
+        img[sr*self.cell:(sr+1)*self.cell, sc*self.cell:(sc+1)*self.cell] = self.color_start
+
+        # Goal
+        gr, gc = self.goal
+        img[gr*self.cell:(gr+1)*self.cell, gc*self.cell:(gc+1)*self.cell] = self.color_goal
+
+        # Agent
+        ar, ac = divmod(self.s, self.cols)
+        img[ar*self.cell:(ar+1)*self.cell, ac*self.cell:(ac+1)*self.cell] = self.color_agent
+
+        return img
