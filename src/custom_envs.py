@@ -17,11 +17,11 @@ from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 # ]
 # Layout: Cliff Gauntlet (Good)
 ASCII_MAP = [
-    "G....CCCC....",
-    ".C...........",
-    ".CC...........",
-    ".C....CCC.....",
-    ".C...........",
+    "G............",
+    ".............",
+    ".CCCCCC......",
+    ".CCCCCC......",
+    ".............",
     "S............",
 ]
 
