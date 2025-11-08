@@ -16,14 +16,14 @@ from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 #     "S.............",
 # ]
 # Layout: Cliff Gauntlet (Good)
-ASCII_MAP = [
-    "G............",
-    ".............",
-    ".CCCCCC......",
-    ".CCCCCC......",
-    ".............",
-    "S............",
-]
+# ASCII_MAP = [
+#     "G............",
+#     ".............",
+#     ".CCCCCC......",
+#     ".CCCCCC......",
+#     ".............",
+#     "S............",
+# ]
 
 # Layout: Temptation Loop (Working)
 # ASCII_MAP = [
@@ -36,25 +36,61 @@ ASCII_MAP = [
 # ]
 
 
-ASCII_MAP = [row.replace(" ", "") for row in ASCII_MAP]
+# ASCII_MAP = [row.replace(" ", "") for row in ASCII_MAP]
+
+# ==========================
+# MULTIPLE MAP LAYOUTS
+# ==========================
+
+LAYOUTS = {
+    "default": [
+        "G............",
+        ".............",
+        ".CCCCCC......",
+        ".CCCCCC......",
+        ".............",
+        "S............",
+    ],
+    "gauntlet": [
+        "......G......",
+        ".CCCC..CCCC..",
+        ".C..C..C..C..",
+        ".C..C..C..C..",
+        ".............",
+        "S............",
+    ],
+    "loop": [
+        ".....G",
+        ".CC.CC",
+        ".C..C.",
+        ".C..C.",
+        ".CC..C",
+        "S.....",
+    ]
+}
+
+
+
 
 class CustomCliffWalkingEnv(CliffWalkingEnv):
     metadata = {"render_modes": ["rgb_array", "ansi"], "render_fps": 4}
 
-    def __init__(self, render_mode="rgb_array"):
+    def __init__(self,layout="default", render_mode="rgb_array"):
         super().__init__(render_mode=render_mode)
         self.render_mode = render_mode
+        
+        self.map_data = [row.replace(" ", "") for row in LAYOUTS[layout]] 
 
         # Parse map
-        self.rows = len(ASCII_MAP)
-        self.cols = len(ASCII_MAP[0])
+        self.rows = len(self.map_data)
+        self.cols = len(self.map_data[0])
 
         self.cliff_coords = set()
         self.start = None
         self.goal = None
         for r in range(self.rows):
             for c in range(self.cols):
-                ch = ASCII_MAP[r][c]
+                ch = self.map_data[r][c]
                 if ch == "S":
                     self.start = (r, c)
                 elif ch == "G":
@@ -62,7 +98,7 @@ class CustomCliffWalkingEnv(CliffWalkingEnv):
                 elif ch == "C":
                     self.cliff_coords.add((r, c))
         if self.start is None or self.goal is None:
-            raise ValueError("ASCII_MAP must contain exactly one S and one G.")
+            raise ValueError("map_data must contain exactly one S and one G.")
 
         # Updated observation space to dynamically match custom map (not the base 4x12)
         self.observation_space = gym.spaces.Discrete(self.rows * self.cols)
@@ -117,7 +153,7 @@ class CustomCliffWalkingEnv(CliffWalkingEnv):
 
     def render(self):
         if self.render_mode == "ansi":
-            grid = [list(row) for row in ASCII_MAP]
+            grid = [list(row) for row in self.map_data]
             ar, ac = divmod(self.s, self.cols)
             if (ar, ac) not in self.cliff_coords and (ar, ac) != self.goal:
                 grid[ar][ac] = "A"

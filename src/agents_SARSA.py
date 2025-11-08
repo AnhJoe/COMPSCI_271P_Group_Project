@@ -2,7 +2,7 @@ import numpy as np
 
 class SarsaAgent:
     returns_next_action = True
-    def __init__(self, env, gamma=0.95, alpha=0.5, epsilon=1.0, decay_rate=0.995, min_eps=0.01):
+    def __init__(self, env, gamma=0.95, alpha=0.5, epsilon=1.0, decay_rate=0.990, min_eps=0.01):
         self.gamma = gamma
         self.alpha = alpha
         self.epsilon = epsilon
@@ -22,10 +22,15 @@ class SarsaAgent:
         self.epsilon = max(self.epsilon * self.decay_rate, self.min_eps)
 
     def get_action(self, state):
+        n_actions = self.Q.shape[1]
         if np.random.rand() < self.epsilon:
-            return np.random.randint(self.Q.shape[1])
+            return np.random.randint(n_actions)
         else:
-            return np.argmax(self.Q[state, :])
+            maxv = np.max(self.Q[state])
+            # pick randomly among ties
+            candidates = np.flatnonzero(self.Q[state] == maxv)
+            return int(np.random.choice(candidates))
+
 
     def update(self, state, action, reward, next_state, done):
         next_action = self.get_action(next_state)

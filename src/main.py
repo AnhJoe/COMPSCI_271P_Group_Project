@@ -11,7 +11,7 @@ import os
 import copy
 from agents_Q import QLearningAgent
 from agents_SARSA import SarsaAgent
-from utils import plot_learning_curve, submit_video
+from utils import plot_learning_curve, submit_video, generate_side_by_side
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -28,7 +28,7 @@ def parse_args():
 
 
 
-def train(env, agent, num_episodes=100000):
+def train(env, agent, num_episodes=70000):
     pbar = tqdm.tqdm(range(num_episodes), desc="Training...")
 
     for episode in pbar:
@@ -41,6 +41,8 @@ def train(env, agent, num_episodes=100000):
 
         if is_sarsa:
             # SARSA: get initial action
+            # Force exploratory behavior early
+            # agent.epsilon = max(agent.epsilon, 0.3)
             action = agent.get_action(state)
 
         while not (terminated or truncated):
@@ -61,8 +63,10 @@ def train(env, agent, num_episodes=100000):
                              terminated or truncated)
                 state = next_state
 
-        agent.epsilon_decay()
+        
         agent.rewards.append(episode_reward)
+        
+        agent.epsilon_decay()
 
     return agent.Q, agent.rewards
 
@@ -95,53 +99,65 @@ def eval_video(env, agent, video_save_path, num_videos, algo_name=""):
 
 def main():
     args = parse_args()
+    args.num_episodes = 50000   # override to 50k episodes
 
+    layouts = ["default", "gauntlet", "loop"]
     algos = {
         "Q-Learning": QLearningAgent,
         "SARSA": SarsaAgent
     }
 
-    for algo_name, AlgoClass in algos.items():
-        print(f"\n Training {algo_name.upper()}:\n")
+    for layout in layouts:
+        print(f"\n==============================")
+        print(f"Running Layout: {layout}")
+        print(f"==============================")
 
-        # Create fresh env for each algo
-        env = CustomCliffWalkingEnv(render_mode="rgb_array")
-        env = gym.wrappers.TimeLimit(env, max_episode_steps=200)
-        state, info = env.reset()
+        layout_dir = os.path.join(args.output, layout)
+        os.makedirs(layout_dir, exist_ok=True)
 
-        # Create unique output directory per algo
-        output_dir = os.path.join(args.output, algo_name)
-        os.makedirs(output_dir, exist_ok=True)
+        trained_agents = {}
 
-        # Initialize agent
-        agent = AlgoClass(
-            env,
-            gamma=args.gamma,
-            alpha=args.alpha,
-            epsilon=args.epsilon,
-            decay_rate=args.decay_rate,
-            min_eps=args.min_eps
-        )
+        for algo_name, AlgoClass in algos.items():
+            print(f"\n Training {algo_name} on {layout}...")
 
-        # Train agent
-        Q, rewards = train(env, agent, num_episodes=args.num_episodes)
+            env = CustomCliffWalkingEnv(layout=layout, render_mode="rgb_array")
+            env = gym.wrappers.TimeLimit(env, max_episode_steps=200)
 
-        # Save plot
-        plot_path = os.path.join(output_dir, f"{algo_name}_plot.png")
-        plot_learning_curve(rewards, plot_path, algo_name)
+            output_dir = os.path.join(layout_dir, algo_name)
+            os.makedirs(output_dir, exist_ok=True)
 
-        # Create and save evaluation video
-        video_dir = os.path.join(output_dir, "videos")
-        os.makedirs(video_dir, exist_ok=True)
-        eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
-        submit_video(video_dir)
+            agent = AlgoClass(
+                env,
+                gamma=args.gamma,
+                alpha=args.alpha,
+                epsilon=args.epsilon,
+                decay_rate=args.decay_rate,
+                min_eps=args.min_eps
+            )
 
+            Q, rewards = train(env, agent, num_episodes=args.num_episodes)
 
-        print(f"\n {algo_name} Eval video saved: {os.path.abspath(video_dir)}")
-        print(f" {algo_name} Plot saved: {os.path.abspath(plot_path)}")
+            trained_agents[algo_name] = agent
 
-    print("\n Finished training both Q-Learning and SARSA\n")
+            plot_learning_curve(
+                rewards,
+                os.path.join(output_dir, f"{algo_name}.png"),
+                algo_name
+            )
 
+            video_dir = os.path.join(output_dir, "videos")
+            os.makedirs(video_dir, exist_ok=True)
+
+            eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
+            submit_video(video_dir)
+
+        # when both are trained -> generate side-by-side video and plot
+        generate_side_by_side(layout_dir)
+
+    print("\n Finished 3 layouts with both agents.")
+    
 if __name__ == "__main__":
     main()
+        
+
 
