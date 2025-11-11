@@ -9,21 +9,38 @@ import argparse
 import tqdm
 import os
 import copy
+import csv
 from agents_Q import QLearningAgent
 from agents_SARSA import SarsaAgent
-from utils import plot_learning_curve, submit_video
+from utils import submit_video, plot_avg_reward_per_100, plot_cliff_and_reward, plot_cliff_fall_rate, plot_state_value_heatmap
+from datetime import datetime
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
+
+    # Shared controls for both algorithms
     parser.add_argument("-o", "--output", type=str, default="data", help="Output directory")
-    parser.add_argument("--gamma", type=float, default=0.95)
-    parser.add_argument("--alpha", type=float, default=0.1)
-    parser.add_argument("--epsilon", type=float, default=1.0)
-    parser.add_argument("--decay-rate", type=float, default=0.9995)
-    parser.add_argument("--min-eps", type=float, default=0.05)
     parser.add_argument("--env", type=str, default="CliffWalking-v1")
-    parser.add_argument("--num-episodes", type=int, default=100000)
+    parser.add_argument("--num-episodes", type=int, default=10000)
     parser.add_argument("--num-videos", type=int, default=1, help="# of videos to save")
+    
+    # Q-Learning hyperparameters
+    group_q = parser.add_argument_group("QLearning hyperparameters")
+    group_q.add_argument("--qlearning-gamma", dest="QLearning_gamma", type=float, default=0.95)
+    group_q.add_argument("--qlearning-alpha", dest="QLearning_alpha", type=float, default=0.1)
+    group_q.add_argument("--qlearning-epsilon", dest="QLearning_epsilon", type=float, default=1.0)
+    group_q.add_argument("--qlearning-decay-rate", dest="QLearning_decay_rate", type=float, default=0.9995)
+    group_q.add_argument("--qlearning-min-eps", dest="QLearning_min_eps", type=float, default=0.05)
+
+    # SARSA hyperparameters 
+    group_s = parser.add_argument_group("SARSA hyperparameters")
+    group_s.add_argument("--sarsa-gamma", dest="SARSA_gamma", type=float, default=0.95)
+    group_s.add_argument("--sarsa-alpha", dest="SARSA_alpha", type=float, default=0.1)
+    group_s.add_argument("--sarsa-epsilon", dest="SARSA_epsilon", type=float, default=1.0)
+    group_s.add_argument("--sarsa-decay-rate", dest="SARSA_decay_rate", type=float, default=0.9995)
+    group_s.add_argument("--sarsa-min-eps", dest="SARSA_min_eps", type=float, default=0.05)
+
     return parser.parse_args()
 
 
@@ -31,43 +48,125 @@ def parse_args():
 def train(env, agent, num_episodes=100000):
     pbar = tqdm.tqdm(range(num_episodes), desc="Training...")
 
+     # Define metrics
+    cliff_falls_overall = 0
+    cliff_falls_per_100 = []
+    avg_reward_per_100 = []
+
+    falls_this_window = 0
+    rewards_this_window = []
+
+
     for episode in pbar:
         state, _ = env.reset()
         terminated = truncated = False
         episode_reward = 0
 
-        # Detect algorithm type by class name
+        # Detect algorithm type by name
         is_sarsa = hasattr(agent, "returns_next_action")
 
         if is_sarsa:
-            # SARSA: get initial action
             action = agent.get_action(state)
 
         while not (terminated or truncated):
+
+            # SARSA loop
             if is_sarsa:
-                # -------------- SARSA LOOP --------------
                 next_state, reward, terminated, truncated, _ = env.step(action)
                 episode_reward += reward
-                action = agent.update(state, action, reward, next_state,
-                                      terminated or truncated)
+
+                # Count cliff fall
+                if reward == -100:
+                    cliff_falls_overall += 1
+                    falls_this_window += 1
+
+                action = agent.update(state, action, reward, next_state, terminated or truncated)
                 state = next_state
 
+            # Q-learning loop
             else:
-                # --------- Q-LEARNING LOOP --------------
                 action = agent.get_action(state)
                 next_state, reward, terminated, truncated, _ = env.step(action)
                 episode_reward += reward
-                agent.update(state, action, reward, next_state,
-                             terminated or truncated)
+
+                # Count cliff fall
+                if reward == -100:
+                    cliff_falls_overall += 1
+                    falls_this_window += 1
+
+                agent.update(state, action, reward, next_state, terminated or truncated)
                 state = next_state
 
         agent.epsilon_decay()
         agent.rewards.append(episode_reward)
 
-    return agent.Q, agent.rewards
+        # Track 100-episode window stats
+        rewards_this_window.append(episode_reward)
 
+        if (episode + 1) % 100 == 0:
+            cliff_falls_per_100.append(falls_this_window)
+            avg_reward_per_100.append(np.mean(rewards_this_window))
 
+            falls_this_window = 0
+            rewards_this_window = []
 
+    return {
+        "Q": agent.Q,
+        "episode_rewards": agent.rewards,
+        "cliff_falls_overall": cliff_falls_overall,
+        "cliff_falls_per_100": cliff_falls_per_100,
+        "avg_reward_per_100": avg_reward_per_100
+    }
+
+# Generate run_id for primary keys
+def generate_run_id():
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+# CSV pipeline to store metrics
+def save_metrics_csv(metrics, output_dir, algorithm, run_id):
+    csv_path = os.path.join(output_dir, f"{algorithm}_metrics.csv")
+
+    cliff_falls_per_100 = metrics["cliff_falls_per_100"]
+    avg_reward_per_100 = metrics["avg_reward_per_100"]
+
+    # Cumulative cliff fall count
+    cumulative_falls = 0
+
+    # Create CSV and write header
+    header = [
+        "run_id",
+        "algorithm",
+        "episode_window_start",
+        "episode_window_end",
+        "cliff_fall_count",
+        "cliff_fall_rate_overall",
+        "avg_reward_100_eps"
+    ]
+
+    with open(csv_path, mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+
+        for idx, falls in enumerate(cliff_falls_per_100):
+            cumulative_falls += falls
+            reward_avg = avg_reward_per_100[idx]
+
+            window_start = idx * 100 + 1
+            window_end = (idx + 1) * 100
+
+            row = [
+                run_id,
+                algorithm,
+                window_start,
+                window_end,
+                falls,
+                cumulative_falls,
+                reward_avg
+            ]
+
+            writer.writerow(row)
+
+    return csv_path
 
 def eval_video(env, agent, video_save_path, num_videos, algo_name=""):
     agent = copy.deepcopy(agent)
@@ -104,31 +203,74 @@ def main():
     for algo_name, AlgoClass in algos.items():
         print(f"\n Training {algo_name.upper()}:\n")
 
-        # Create fresh env for each algo
+        # Create fresh env
         env = CustomCliffWalkingEnv(render_mode="rgb_array")
-        env = gym.wrappers.TimeLimit(env, max_episode_steps=200)
         state, info = env.reset()
 
         # Create unique output directory per algo
         output_dir = os.path.join(args.output, algo_name)
         os.makedirs(output_dir, exist_ok=True)
 
-        # Initialize agent
-        agent = AlgoClass(
-            env,
-            gamma=args.gamma,
-            alpha=args.alpha,
-            epsilon=args.epsilon,
-            decay_rate=args.decay_rate,
-            min_eps=args.min_eps
-        )
+
+
+        # Initialize agents (Q-Learning & SARSA)
+        if algo_name == "Q-Learning":
+            agent = AlgoClass(
+                env,
+                gamma=args.QLearning_gamma,
+                alpha=args.QLearning_alpha,
+                epsilon=args.QLearning_epsilon,
+                decay_rate=args.QLearning_decay_rate,
+                min_eps=args.QLearning_min_eps,
+            )
+
+        elif algo_name == "SARSA":
+            agent = AlgoClass(
+                env,
+                gamma=args.SARSA_gamma,
+                alpha=args.SARSA_alpha,
+                epsilon=args.SARSA_epsilon,
+                decay_rate=args.SARSA_decay_rate,
+                min_eps=args.SARSA_min_eps,
+            )
 
         # Train agent
-        Q, rewards = train(env, agent, num_episodes=args.num_episodes)
+        metrics = train(env, agent, num_episodes=args.num_episodes)
+        q_table = metrics["Q"]
+        episode_rewards = metrics["episode_rewards"]
+        cliff_falls_overall = metrics["cliff_falls_overall"]
+        cliff_falls_per_100 = metrics["cliff_falls_per_100"]
+        avg_reward_per_100 = metrics["avg_reward_per_100"]
 
-        # Save plot
-        plot_path = os.path.join(output_dir, f"{algo_name}_plot.png")
-        plot_learning_curve(rewards, plot_path, algo_name)
+        # Save Q-table
+        qtable_path = os.path.join(output_dir, f"{algo_name}_q_table.npy")
+        np.save(qtable_path, q_table)
+
+        # Save metrics to CSV
+        run_id = generate_run_id()
+        csv_path = save_metrics_csv(
+            metrics=metrics,
+            output_dir=output_dir,
+            algorithm=algo_name,
+            run_id=run_id
+        )
+
+        # Cliff fall plot
+        cliff_plot_path = os.path.join(output_dir, f"{algo_name}_cliff_falls.png")
+        plot_cliff_fall_rate(cliff_falls_per_100, cliff_plot_path, algo_name)
+
+        # Avg reward per 100 episode plot
+        reward100_plot = os.path.join(output_dir, f"{algo_name}_avg_reward_100.png")
+        plot_avg_reward_per_100(avg_reward_per_100, reward100_plot, algo_name)
+
+        # Combined plot
+        combined_plot = os.path.join(output_dir, f"{algo_name}_cliff_vs_reward.png")
+        plot_cliff_and_reward(cliff_falls_per_100, avg_reward_per_100, combined_plot, algo_name)
+
+        # State-value heatmap
+        env.unwrapped
+        heatmap_path = os.path.join(output_dir, f"{algo_name}_value_heatmap.png")
+        plot_state_value_heatmap(q_table, env.rows, env.cols, heatmap_path, algo_name)
 
         # Create and save evaluation video
         video_dir = os.path.join(output_dir, "videos")
@@ -136,7 +278,7 @@ def main():
         eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
         submit_video(video_dir)
 
-
+        print(f"\n {algo_name} Q-table saved: {os.path.abspath(qtable_path)}")
         print(f"\n {algo_name} Eval video saved: {os.path.abspath(video_dir)}")
         print(f" {algo_name} Plot saved: {os.path.abspath(plot_path)}")
 

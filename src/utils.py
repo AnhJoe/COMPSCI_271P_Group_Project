@@ -3,21 +3,63 @@ import numpy as np
 from moviepy import VideoFileClip
 import os
 
+def plot_cliff_and_reward(cliff_falls_per_100, avg_reward_per_100, save_path, algorithm):
+    fig, ax1 = plt.subplots(figsize=(10, 5))
 
-def plot_learning_curve(rewards, save_path, algo_name=""):
-    plt.plot(np.convolve(rewards, np.ones(100)/100, mode='valid'))
-    plt.ylim(-120, 0)
-    plt.xlabel("Episode")
-    plt.ylabel("Average Reward (100-episode window)")
-    
-    title = f"{algo_name.upper()} on CliffWalking" if algo_name else "Learning Curve"
-    plt.title(title)
+    ax1.set_title(f"{algorithm} – Cliff Falls vs Avg Reward")
+    ax1.set_xlabel("100-Episode Windows")
 
-    dirname = os.path.dirname(save_path)
-    basename = f"{algo_name}_learning_curve.png" if algo_name else "learning_curve.png"
-    out_path = os.path.join(dirname, basename)
+    # Cliff falls (left axis)
+    ax1.set_ylabel("Cliff Falls", color="red")
+    ax1.plot(cliff_falls_per_100, color="red", marker="x", label="Cliff Falls")
+    ax1.tick_params(axis='y', labelcolor='red')
 
-    plt.savefig(out_path)
+    # Avg reward (right axis)
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Average Reward", color="blue")
+    ax2.plot(avg_reward_per_100, color="blue", marker="o", label="Avg Reward")
+    ax2.tick_params(axis='y', labelcolor='blue')
+
+    fig.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
+def plot_state_value_heatmap(q_table, rows, cols, save_path, algorithm):
+    # Compute V(s) = max_a Q(s, a)
+    state_values = np.max(q_table, axis=1)
+    grid_values = state_values.reshape((rows, cols))
+
+    plt.figure(figsize=(8, 6))
+    plt.imshow(grid_values, cmap="viridis")
+    plt.colorbar(label="State Value")
+    plt.title(f"{algorithm} – State Value Heatmap")
+    plt.xlabel("Columns")
+    plt.ylabel("Rows")
+    plt.savefig(save_path)
+    plt.close()
+
+
+def plot_avg_reward_per_100(avg_reward_per_100, save_path, algorithm):
+    plt.figure(figsize=(10, 5))
+    plt.plot(avg_reward_per_100, marker='o', color='green')
+    plt.title(f"{algorithm} – Average Reward per 100 Episodes")
+    plt.xlabel("100-Episode Windows")
+    plt.ylabel("Average Reward")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
+
+
+def plot_cliff_fall_rate(cliff_falls_per_100, save_path, algorithm):
+    plt.figure(figsize=(10, 5))
+    plt.plot(cliff_falls_per_100, marker='o')
+    plt.title(f"{algorithm} – Cliff Fall Rate per 100 Episodes")
+    plt.xlabel("100-Episode Windows")
+    plt.ylabel("Cliff Falls")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
     plt.close()
 
 
