@@ -2,6 +2,7 @@
 import gymnasium as gym
 from gymnasium.wrappers import RecordVideo
 from custom_envs import CustomCliffWalkingEnv
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,10 +11,10 @@ import tqdm
 import os
 import copy
 import csv
+
 from agents_Q import QLearningAgent
 from agents_SARSA import SarsaAgent
 from utils import submit_video, plot_avg_reward_per_100, plot_cliff_and_reward, plot_cliff_fall_rate, plot_state_value_heatmap
-from datetime import datetime
 
 
 def parse_args():
@@ -27,19 +28,19 @@ def parse_args():
     # CHANGE NUM-RUNS BACK TO 1 WHEN YOU'RE DONE
     parser.add_argument("--num-runs", type=int, default=1, help="How many times to repeat the full experiment")
     
-    # BASELINE Q-Learning hyperparameters
+    # BASELINE Q-Learning hyperparameters (DONE)
     parser.add_argument("--qlearning-gamma", dest="QLearning_gamma", type=float, default=0.95)
     parser.add_argument("--qlearning-alpha", dest="QLearning_alpha", type=float, default=0.5)  
     parser.add_argument("--qlearning-epsilon", dest="QLearning_epsilon", type=float, default=1.0)
     parser.add_argument("--qlearning-decay-rate", dest="QLearning_decay_rate", type=float, default=0.999)
     parser.add_argument("--qlearning-min-eps", dest="QLearning_min_eps", type=float, default=0.05)
 
-    # BASELINE SARSA hyperparameters 
-    parser.add_argument("--sarsa-gamma", dest="SARSA_gamma", type=float, default=0.95)
-    parser.add_argument("--sarsa-alpha", dest="SARSA_alpha", type=float, default=0.3)          
-    parser.add_argument("--sarsa-epsilon", dest="SARSA_epsilon", type=float, default=1.0)
-    parser.add_argument("--sarsa-decay-rate", dest="SARSA_decay_rate", type=float, default=0.999)
-    parser.add_argument("--sarsa-min-eps", dest="SARSA_min_eps", type=float, default=0.05)
+    # BASELINE SARSA hyperparameters (DONE)
+    # parser.add_argument("--sarsa-gamma", dest="SARSA_gamma", type=float, default=0.95)
+    # parser.add_argument("--sarsa-alpha", dest="SARSA_alpha", type=float, default=0.3)          
+    # parser.add_argument("--sarsa-epsilon", dest="SARSA_epsilon", type=float, default=1.0)
+    # parser.add_argument("--sarsa-decay-rate", dest="SARSA_decay_rate", type=float, default=0.999)
+    # parser.add_argument("--sarsa-min-eps", dest="SARSA_min_eps", type=float, default=0.05)
 
     # # TUNED Q-Learning hyperparameters (WORKING)
     # parser.add_argument("--qlearning-gamma", dest="QLearning_gamma", type=float, default=0.95)
@@ -48,12 +49,12 @@ def parse_args():
     # parser.add_argument("--qlearning-decay-rate", dest="QLearning_decay_rate", type=float, default=0.999)
     # parser.add_argument("--qlearning-min-eps", dest="QLearning_min_eps", type=float, default=0.05)
 
-    # # TUNED SARSA hyperparameters (WORKING)
-    # parser.add_argument("--sarsa-gamma", dest="SARSA_gamma", type=float, default=0.95)
-    # parser.add_argument("--sarsa-alpha", dest="SARSA_alpha", type=float, default=0.3)          
-    # parser.add_argument("--sarsa-epsilon", dest="SARSA_epsilon", type=float, default=1.0)
-    # parser.add_argument("--sarsa-decay-rate", dest="SARSA_decay_rate", type=float, default=0.999)
-    # parser.add_argument("--sarsa-min-eps", dest="SARSA_min_eps", type=float, default=0.05)
+    # TUNED SARSA hyperparameters (DONE)
+    parser.add_argument("--sarsa-gamma", dest="SARSA_gamma", type=float, default=0.99)
+    parser.add_argument("--sarsa-alpha", dest="SARSA_alpha", type=float, default=0.15)          
+    parser.add_argument("--sarsa-epsilon", dest="SARSA_epsilon", type=float, default=1.0)
+    parser.add_argument("--sarsa-decay-rate", dest="SARSA_decay_rate", type=float, default=0.997)
+    parser.add_argument("--sarsa-min-eps", dest="SARSA_min_eps", type=float, default=0.02)
 
     return parser.parse_args()
 
@@ -121,17 +122,17 @@ def train(env, agent, num_episodes=100000):
                 state = next_state
 
         agent.epsilon_decay()
-        agent.rewards.append(episode_reward)
+        # agent.rewards.append(episode_reward)
 
         # Track 100-episode window stats
-        rewards_this_window.append(episode_reward)
+        # rewards_this_window.append(episode_reward)
 
-        if (episode + 1) % 100 == 0:
-            cliff_falls_per_100.append(falls_this_window)
-            avg_reward_per_100.append(np.mean(rewards_this_window))
+        # if (episode + 1) % 100 == 0:
+        #     cliff_falls_per_100.append(falls_this_window)
+        #     avg_reward_per_100.append(np.mean(rewards_this_window))
 
-            falls_this_window = 0
-            rewards_this_window = []
+        #     falls_this_window = 0
+        #     rewards_this_window = []
 
     return {
         "Q": agent.Q,
@@ -283,13 +284,13 @@ def main():
             np.save(qtable_path, q_table)
 
             # Save metrics to CSV
-            run_id = generate_run_id()
-            csv_path = save_metrics_csv(
-                metrics=metrics,
-                output_dir=output_dir,
-                algorithm=algo_name,
-                run_id=run_id
-            )
+            # run_id = generate_run_id()
+            # csv_path = save_metrics_csv(
+            #     metrics=metrics,
+            #     output_dir=output_dir,
+            #     algorithm=algo_name,
+            #     run_id=run_id
+            # )
 
             # Cliff fall plot
             cliff_plot_path = os.path.join(output_dir, f"{algo_name}_cliff_falls.png")
@@ -309,10 +310,10 @@ def main():
             plot_state_value_heatmap(q_table, env.rows, env.cols, heatmap_path, algo_name)
 
             # Create and save evaluation video
-            # video_dir = os.path.join(output_dir, "videos")
-            # os.makedirs(video_dir, exist_ok=True)
-            # eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
-            # submit_video(video_dir)
+            video_dir = os.path.join(output_dir, "videos")
+            os.makedirs(video_dir, exist_ok=True)
+            eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
+            submit_video(video_dir)
 
     print("\n===== All runs completed successfully =====\n")
 
