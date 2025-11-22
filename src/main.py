@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--num-episodes", type=int, default=10000)
     parser.add_argument("--num-videos", type=int, default=1, help="# of videos to save")
     # CHANGE NUM-RUNS BACK TO 1 WHEN YOU'RE DONE
-    parser.add_argument("--num-runs", type=int, default=50, help="How many times to repeat the full experiment")
+    parser.add_argument("--num-runs", type=int, default=1, help="How many times to repeat the full experiment")
     
     # # BASELINE Q-Learning hyperparameters (DONE)
     # parser.add_argument("--qlearning-gamma", dest="QLearning_gamma", type=float, default=0.95)
@@ -288,28 +288,28 @@ def main():
                 run_id=run_id
             )
 
-            # # Cliff fall plot
-            # cliff_plot_path = os.path.join(output_dir, f"{algo_name}_cliff_falls.png")
-            # plot_cliff_fall_rate(cliff_falls_per_100, cliff_plot_path, algo_name)
+            # Cliff fall plot
+            cliff_plot_path = os.path.join(output_dir, f"{algo_name}_cliff_falls.png")
+            plot_cliff_fall_rate(cliff_falls_per_100, cliff_plot_path, algo_name)
 
-            # # Avg reward per 100 episode plot
-            # reward100_plot = os.path.join(output_dir, f"{algo_name}_avg_reward_100.png")
-            # plot_avg_reward_per_100(avg_reward_per_100, reward100_plot, algo_name)
+            # Avg reward per 100 episode plot
+            reward100_plot = os.path.join(output_dir, f"{algo_name}_avg_reward_100.png")
+            plot_avg_reward_per_100(avg_reward_per_100, reward100_plot, algo_name)
 
-            # # Combined plot
-            # combined_plot = os.path.join(output_dir, f"{algo_name}_cliff_vs_reward.png")
-            # plot_cliff_and_reward(cliff_falls_per_100, avg_reward_per_100, combined_plot, algo_name)
+            # Combined plot
+            combined_plot = os.path.join(output_dir, f"{algo_name}_cliff_vs_reward.png")
+            plot_cliff_and_reward(cliff_falls_per_100, avg_reward_per_100, combined_plot, algo_name)
 
-            # # State-value heatmap
-            # env.unwrapped
-            # heatmap_path = os.path.join(output_dir, f"{algo_name}_value_heatmap.png")
-            # plot_state_value_heatmap(q_table, env.rows, env.cols, heatmap_path, algo_name)
+            # State-value heatmap
+            env.unwrapped
+            heatmap_path = os.path.join(output_dir, f"{algo_name}_value_heatmap.png")
+            plot_state_value_heatmap(q_table, env.rows, env.cols, heatmap_path, algo_name)
 
-            # # Create and save evaluation video
-            # video_dir = os.path.join(output_dir, "videos")
-            # os.makedirs(video_dir, exist_ok=True)
-            # eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
-            # submit_video(video_dir)
+            # Create and save evaluation video
+            video_dir = os.path.join(output_dir, "videos")
+            os.makedirs(video_dir, exist_ok=True)
+            eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
+            submit_video(video_dir)
 
     print("\n===== All runs completed successfully =====\n")
 
