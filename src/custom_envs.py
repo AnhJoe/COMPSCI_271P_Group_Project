@@ -16,7 +16,7 @@ from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 #     "S............",
 # ]
 
-# #Layout2: Double Canyon (Working)
+# # #Layout2: Double Canyon (Working)
 # ASCII_MAP = [
 #     "....G.........",   
 #     "CCCC.CCC..CCCC",   
