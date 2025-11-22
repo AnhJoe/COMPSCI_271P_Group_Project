@@ -33,7 +33,7 @@ def plot_cliff_and_reward(cliff_falls_per_100, avg_reward_per_100, save_path, al
     # Combine legends from both axes
     lines = [line1, line2]
     labels = [line.get_label() for line in lines]
-    ax1.legend(lines, labels, loc="upper right")
+    ax1.legend(lines, labels, loc="center right")
 
     fig.tight_layout()
     plt.savefig(save_path)
@@ -50,17 +50,6 @@ def plot_state_value_heatmap(q_table, rows, cols, save_path, algorithm):
     plt.title(f"{algorithm} – State Value Heatmap")
     plt.xlabel("Columns")
     plt.ylabel("Rows")
-
-    # Add legend-like text
-    plt.text(
-        0.02, 0.02,
-        "Colors represent max Q-value per state",
-        transform=plt.gca().transAxes,
-        fontsize=9,
-        color="white",
-        bbox=dict(facecolor="black", alpha=0.4)
-    )
-
     plt.savefig(save_path)
     plt.close()
 
@@ -72,7 +61,7 @@ def plot_avg_reward_per_100(avg_reward_per_100, save_path, algorithm):
     plt.xlabel("100-Episode Windows")
     plt.ylabel("Average Reward")
     plt.grid(True)
-    plt.legend(loc="upper left")
+    plt.legend(loc="lower right")
     plt.tight_layout()
     plt.savefig(save_path)
     plt.close()
@@ -85,7 +74,7 @@ def plot_cliff_fall_rate(cliff_falls_per_100, save_path, algorithm):
     plt.xlabel("100-Episode Windows")
     plt.ylabel("Cliff Falls")
     plt.grid(True)
-    plt.legend(loc="upper left")
+    plt.legend(loc="upper right")
     plt.tight_layout()
     plt.savefig(save_path)
     plt.close()

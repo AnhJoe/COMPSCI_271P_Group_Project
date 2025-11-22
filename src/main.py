@@ -122,17 +122,17 @@ def train(env, agent, num_episodes=100000):
                 state = next_state
 
         agent.epsilon_decay()
-        # agent.rewards.append(episode_reward)
+        agent.rewards.append(episode_reward)
 
         # Track 100-episode window stats
-        # rewards_this_window.append(episode_reward)
+        rewards_this_window.append(episode_reward)
 
-        # if (episode + 1) % 100 == 0:
-        #     cliff_falls_per_100.append(falls_this_window)
-        #     avg_reward_per_100.append(np.mean(rewards_this_window))
+        if (episode + 1) % 100 == 0:
+            cliff_falls_per_100.append(falls_this_window)
+            avg_reward_per_100.append(np.mean(rewards_this_window))
 
-        #     falls_this_window = 0
-        #     rewards_this_window = []
+            falls_this_window = 0
+            rewards_this_window = []
 
     return {
         "Q": agent.Q,
@@ -284,13 +284,13 @@ def main():
             np.save(qtable_path, q_table)
 
             # Save metrics to CSV
-            # run_id = generate_run_id()
-            # csv_path = save_metrics_csv(
-            #     metrics=metrics,
-            #     output_dir=output_dir,
-            #     algorithm=algo_name,
-            #     run_id=run_id
-            # )
+            run_id = generate_run_id()
+            csv_path = save_metrics_csv(
+                metrics=metrics,
+                output_dir=output_dir,
+                algorithm=algo_name,
+                run_id=run_id
+            )
 
             # Cliff fall plot
             cliff_plot_path = os.path.join(output_dir, f"{algo_name}_cliff_falls.png")
