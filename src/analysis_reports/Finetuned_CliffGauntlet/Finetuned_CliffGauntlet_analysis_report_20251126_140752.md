@@ -1,13 +1,13 @@
 # Analysis Report – Finetuned_cliffgauntlet
-Generated on: **20251122_210633**
+Generated on: **20251126_140752**
 
 ## 1. Hypothesis Test Results
-| Hypothesis | Interpretation | Result |
-|-----------|----------------|--------|
-| H1: Q has fewer falls overall | Mann–Whitney U | **Not supported** |
-| H2: Q learns faster early | First 500 episodes | **Not supported** |
-| H3: Faster exponential decay | b(Q) > b (SARSA) | **Not supported** |
-| H4: Reward stability | Variance decreasing | Q: **True**, SARSA: **True** |
+| Hypothesis | Interpretation | p-value | Result |
+|-----------|----------------|---------|--------|
+| H1: Q has fewer falls overall | Mann–Whitney U | 1.00000 | **Not supported** |
+| H2: Q learns faster early | First 500 episodes | 1.00000 | **Not supported** |
+| H3: Faster exponential decay | b(Q) > b (SARSA) | — | **Not supported** |
+| H4: Reward stability | Variance decreasing | — | Q: **True**, SARSA: **True** |
 
 ---
 ## 2. Exponential Fit Parameters

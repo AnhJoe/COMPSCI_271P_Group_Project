@@ -66,10 +66,12 @@ def run_analysis(q_csv_path, s_csv_path, output_dir, prefix="baseline"):
     t = np.linspace(1, max(max(q_windows), max(s_windows)), 200)
 
     plt.figure(figsize=(8, 5))
-    plt.scatter(q_windows, q_falls, label="Q-Learning falls", alpha=0.6)
-    plt.scatter(s_windows, s_falls, label="SARSA falls", alpha=0.6)
-    plt.plot(t, expo(t, *popt_q), label="Q-learning fit")
-    plt.plot(t, expo(t, *popt_s), label="SARSA fit")
+    plt.scatter(q_windows, q_falls, label="Q-Learning falls", alpha=0.4, color="gray")
+    plt.scatter(s_windows, s_falls, label="SARSA falls", alpha=0.4, color="black")
+    
+    plt.plot(t, expo(t, *popt_q), label="Q-learning fit", color="red", linewidth=3)
+    plt.plot(t, expo(t, *popt_s), label="SARSA fit", color="blue", linewidth=3)
+    
     plt.xlabel("Episode Window")
     plt.ylabel("Cliff Falls per 100 episodes")
     plt.title(f"Exponential Decay Fit ({prefix})")
@@ -122,12 +124,12 @@ def run_analysis(q_csv_path, s_csv_path, output_dir, prefix="baseline"):
         f.write(f"Generated on: **{timestamp}**\n\n")
         f.write("## 1. Hypothesis Test Results\n")
 
-        f.write("| Hypothesis | Interpretation | Result |\n")
-        f.write("|-----------|----------------|--------|\n")
-        f.write(f"| H1: Q has fewer falls overall | Mann–Whitney U | **{'Supported' if h1_result else 'Not supported'}** |\n")
-        f.write(f"| H2: Q learns faster early | First 500 episodes | **{'Supported' if h2_result else 'Not supported'}** |\n")
-        f.write(f"| H3: Faster exponential decay | b(Q) > b (SARSA) | **{'Supported' if h3_result else 'Not supported'}** |\n")
-        f.write(f"| H4: Reward stability | Variance decreasing | Q: **{q_stability_improved}**, SARSA: **{s_stability_improved}** |\n")
+        f.write("| Hypothesis | Interpretation | p-value | Result |\n")
+        f.write("|-----------|----------------|---------|--------|\n")
+        f.write(f"| H1: Q has fewer falls overall | Mann–Whitney U | {p1:.5f} | **{'Supported' if h1_result else 'Not supported'}** |\n")
+        f.write(f"| H2: Q learns faster early | First 500 episodes | {p2:.5f} | **{'Supported' if h2_result else 'Not supported'}** |\n")
+        f.write(f"| H3: Faster exponential decay | b(Q) > b (SARSA) | — | **{'Supported' if h3_result else 'Not supported'}** |\n")
+        f.write(f"| H4: Reward stability | Variance decreasing | — | Q: **{q_stability_improved}**, SARSA: **{s_stability_improved}** |\n")
 
         f.write("\n---\n")
         f.write("## 2. Exponential Fit Parameters\n")

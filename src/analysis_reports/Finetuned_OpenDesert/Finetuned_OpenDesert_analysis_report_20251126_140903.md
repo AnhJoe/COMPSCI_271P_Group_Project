@@ -1,13 +1,13 @@
 # Analysis Report – Finetuned_opendesert
-Generated on: **20251122_210712**
+Generated on: **20251126_140903**
 
 ## 1. Hypothesis Test Results
-| Hypothesis | Interpretation | Result |
-|-----------|----------------|--------|
-| H1: Q has fewer falls overall | Mann–Whitney U | **Not supported** |
-| H2: Q learns faster early | First 500 episodes | **Not supported** |
-| H3: Faster exponential decay | b(Q) > b (SARSA) | **Not supported** |
-| H4: Reward stability | Variance decreasing | Q: **False**, SARSA: **False** |
+| Hypothesis | Interpretation | p-value | Result |
+|-----------|----------------|---------|--------|
+| H1: Q has fewer falls overall | Mann–Whitney U | 1.00000 | **Not supported** |
+| H2: Q learns faster early | First 500 episodes | 1.00000 | **Not supported** |
+| H3: Faster exponential decay | b(Q) > b (SARSA) | — | **Not supported** |
+| H4: Reward stability | Variance decreasing | — | Q: **False**, SARSA: **False** |
 
 ---
 ## 2. Exponential Fit Parameters
