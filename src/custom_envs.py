@@ -5,29 +5,24 @@ from gymnasium.envs.toy_text.cliffwalking import CliffWalkingEnv
 # S = Start, G = Goal, C = Cliff
 # . = Safe floor
 # Change as needed for different layouts
-
-# # Layout1: Cliff Gauntlet (Good)
-# ASCII_MAP = [
-#     "G............",
-#     ".............",
-#     ".CCCCCC......",
-#     ".CCCCCC......",
-#     ".............",
-#     "S............",
-# ]
-
-# # #Layout2: Double Canyon (Working)
-# ASCII_MAP = [
-#     "....G.........",   
-#     "CCCC.CCC..CCCC",   
-#     "CC...CC...CCCC",   
-#     "CC.CCCC...CCCC",   
-#     "CC.C......CCCC",   
-#     "S.............",   
-# ]
-
-# Layout3: Open Desert (Working)
-ASCII_MAP = [
+LAYOUTS = {
+    "CliffGauntlet": [
+    "G............",
+    ".............",
+    ".CCCCCC......",
+    ".CCCCCC......",
+    ".............",
+    "S............",
+    ],
+    "DoubleCanyon": [
+    "....G.........",   
+    "CCCC.CCC..CCCC",   
+    "CC...CC...CCCC",   
+    "CC.CCCC...CCCC",   
+    "CC.C......CCCC",   
+    "S.............",   
+    ],
+    "OpenDesert": [
     "......C..G...",
     ".C..C.....C.C.",
     "....CC........",
@@ -35,21 +30,31 @@ ASCII_MAP = [
     "..C..C........",
     "...........C..",
     "S...C...C.....",
-]
+    ],
+}
 
-ASCII_MAP = [row.replace(" ", "") for row in ASCII_MAP]
+# Function to load a layout into a global variable
+def load_layout(name):
+    global ASCII_MAP
+    ASCII_MAP = [row.replace(" ", "") for row in LAYOUTS[name]]
 
+# Custom Cliff Walking Environment
 class CustomCliffWalkingEnv(CliffWalkingEnv):
     metadata = {"render_modes": ["rgb_array", "ansi"], "render_fps": 4}
-
+    
+    # Load layout before creating an instance
     def __init__(self, render_mode="rgb_array"):
+        # Ensure layout is loaded
+        if "ASCII_MAP" not in globals():
+            raise RuntimeError("Call load_layout(name) before creating CustomCliffWalkingEnv")
+        
+        # Initialize parent class
         super().__init__(render_mode=render_mode)
         self.render_mode = render_mode
 
-        # Parse map
+        # Parse ASCII map
         self.rows = len(ASCII_MAP)
         self.cols = len(ASCII_MAP[0])
-
         self.cliff_coords = set()
         self.start = None
         self.goal = None
@@ -80,12 +85,15 @@ class CustomCliffWalkingEnv(CliffWalkingEnv):
         self.color_goal = (255, 215, 0)
         self.color_agent = (0, 0, 255)
 
+    # Override reset and step to use custom layout
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         self.s = self.start[0] * self.cols + self.start[1]
         return self.s, {}
 
+    # Override step function
     def step(self, action):
+        
         # Convert integer state to grid position
         r, c = divmod(self.s, self.cols)
 
@@ -116,6 +124,7 @@ class CustomCliffWalkingEnv(CliffWalkingEnv):
         self.s = r * self.cols + c
         return self.s, -1, False, False, {}
 
+    # Override render to handle custom layout
     def render(self):
         if self.render_mode == "ansi":
             grid = [list(row) for row in ASCII_MAP]

@@ -1,6 +1,11 @@
-gymnasium[video]
-gymnasium[other]
-gymnasium[toy-text]
-numpy
-matplotlib
-imageio
+gymnasium==0.29.1
+pygame==2.5.2
+numpy==1.26.4
+pandas==2.2.2
+matplotlib==3.8.4
+seaborn==0.13.2
+scipy==1.13.1
+tqdm==4.66.4
+opencv-python==4.9.0.80
+imageio==2.34.1
+moviepy==1.0.3
