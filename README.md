@@ -83,17 +83,22 @@ Higher b → faster learning.
 2) Default Modes & Hyperparameters
 Baseline = what we think the minimal performing config is and provides value to our experiment
 Finetuned = what we think the optimal is and provides value to our experiment
+
 "Baseline": {
-        "Q-Learning": dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
-        "SARSA":      dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
+
+   "Q-Learning": dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
+   
+   "SARSA":      dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
     },
 
-    "Finetuned": {
-        "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.01),
-        "SARSA":      dict(gamma=0.99, alpha=0.12, epsilon=1.0, decay_rate=0.997,  min_eps=0.01),
+"Finetuned": {
+   
+   "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.01),
+   
+   "SARSA":      dict(gamma=0.99, alpha=0.12, epsilon=1.0, decay_rate=0.997,  min_eps=0.01),
     }
 
-3) Notes on Analysis Warnings
+4) Notes on Analysis Warnings
 
 During the statistical analysis phase, you may see the following warnings in the console. These are expected behavior given the nature of the experiment and do not indicate failures or errors.
 
