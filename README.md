@@ -1,34 +1,40 @@
 ## OVERVIEW ##
 This repository implements a complete experimental framework to compare Q-Learning and SARSA across multiple custom CliffWalking layouts using Gymnasium.
 It includes:
--Custom environments
--Training loops
--Finetuned and baseline hyperparameter modes
--CSV metric logging for rewards and cliff fall counts
--Evaluation video recording for .gif
--Full statistical analysis pipeline with five hypothesis tests
--Bootstrap confidence intervals
--Markdown reports & plots
+- Custom environments
+- Training loops
+- Finetuned and baseline hyperparameter modes
+- CSV metric logging for rewards and cliff fall counts
+- Evaluation video recording for .gif
+- Full statistical analysis pipeline with five hypothesis tests
+- Bootstrap confidence intervals
+- Markdown reports & plots
 
 ## FOLDER STRUCTURE ##
 project/
-- src/
+
+src/
 - main.py               # Orchestration
 - agents_Q.py           # Q-Learning
 - agents_SARSA.py       # SARSA
 - custom_envs.py        # Custom ASCII-map envs
 - analyze.py            # Statistical tests, plots, reports
 - utils.py              # Plotting utilities, video exports
-- data/
+
+data/
 - {Baseline|Finetuned}/{Layout}/{Algo}/...csv # Output path for --train-only
-- analysis/
+
+analysis/
 - {Baseline|Finetuned}/{Layout}/...md + plots # Output path for --analysis-only
-- archive/
+
+archive/
 - ...                   # Snapshot of final results
-- requirements.txt
+
+requirements.txt
 
 ## GIT ##
 git clone
+
 pip install -r requirements.txt
 
 ## ARGUMENTS USAGE ##
