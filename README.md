@@ -13,18 +13,18 @@ It includes:
 ## FOLDER STRUCTURE ##
 project/
 - src/
-          - main.py               # Orchestration
-          - agents_Q.py           # Q-Learning
-          - agents_SARSA.py       # SARSA
-          - custom_envs.py        # Custom ASCII-map envs
-          - analyze.py            # Statistical tests, plots, reports
-          - utils.py              # Plotting utilities, video exports
+- main.py               # Orchestration
+- agents_Q.py           # Q-Learning
+- agents_SARSA.py       # SARSA
+- custom_envs.py        # Custom ASCII-map envs
+- analyze.py            # Statistical tests, plots, reports
+- utils.py              # Plotting utilities, video exports
 - data/
-         - {Baseline|Finetuned}/{Layout}/{Algo}/...csv # Output path for --train-only
+- {Baseline|Finetuned}/{Layout}/{Algo}/...csv # Output path for --train-only
 - analysis/
-         - {Baseline|Finetuned}/{Layout}/...md + plots # Output path for --analysis-only
+- {Baseline|Finetuned}/{Layout}/...md + plots # Output path for --analysis-only
 - archive/
-         - ...                   # Snapshot of final results
+- ...                   # Snapshot of final results
 - requirements.txt
 
 ## GIT ##
