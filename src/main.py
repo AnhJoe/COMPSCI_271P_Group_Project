@@ -35,8 +35,16 @@ def parse_args():
     parser.add_argument("--num-episodes", type=int, default=20000, help="# of training episodes per run")
     parser.add_argument("--num-videos", type=int, default=1, help="# of videos to save")
     parser.add_argument("--num-runs", type=int, default=1, help="How many times to repeat the full experiment")
+    parser.add_argument("--algo", type=str, choices=["qlearning", "sarsa", "both"], default="both", help="Select which algorithm(s) (qlearning or sarsa) to run (default: both)")
+    parser.add_argument("--mode", type=str, choices=["baseline", "finetuned", "both"], default="both", help="Choose which hyperparameter mode to run")
+    parser.add_argument("--layout", type=str, choices=["cliffgauntlet", "doublecanyon", "opendesert", "all"], default="all", help="Select which layout to run e.g., cliffgauntlet, doublecanyon, or opendesert (default: all)")
     parser.add_argument( "--analysis-only", action="store_true", help="Run analysis only using existing CSV files, without training or appending new rows")
     parser.add_argument("--train-only", action="store_true", help="Run training only (no analysis)")
+    parser.add_argument("--gamma", type=float, default=None, help="Override discount factor")
+    parser.add_argument("--alpha", type=float, default=None, help="Override learning rate")
+    parser.add_argument("--epsilon", type=float, default=None, help="Override initial epsilon")
+    parser.add_argument("--decay-rate", type=float, default=None, help="Override epsilon decay rate")
+    parser.add_argument("--min-eps", type=float, default=None, help="Override minimum epsilon")
     return parser.parse_args()
 
 # Training loop
@@ -193,22 +201,44 @@ def eval_video(env, agent, video_save_path, num_videos, algo_name=""):
 def main():
     # Parse arguments
     args = parse_args()
-    # Safety check for flags
+    # Select algorithms based on argument
+    if args.algo == "qlearning":
+        selected_algos = ["Q-Learning"]
+    elif args.algo == "sarsa":
+        selected_algos = ["SARSA"]
+    else:
+        selected_algos = ["Q-Learning", "SARSA"]
+    # Select modes based on argument
+    if args.mode == "baseline":
+        selected_modes = ["Baseline"]
+    elif args.mode == "finetuned":
+        selected_modes = ["Finetuned"]
+    else:
+        selected_modes = ["Baseline", "Finetuned"]
+    # Safety check for train and analysis flags
     if args.analysis_only and args.train_only:
         raise ValueError("Cannot use --analysis-only and --train-only at the same time.")
-    
+    # Select layouts based on argument
+    if args.layout == "cliffgauntlet":
+        selected_layouts = ["CliffGauntlet"]
+    elif args.layout == "doublecanyon":
+        selected_layouts = ["DoubleCanyon"]
+    elif args.layout == "opendesert":
+        selected_layouts = ["OpenDesert"]
+    else:
+        selected_layouts = ["CliffGauntlet", "DoubleCanyon", "OpenDesert"]
+
     # Define experiment configurations
-    all_modes = ["Finetuned"]
-    layout_names = ["CliffGauntlet", "DoubleCanyon", "OpenDesert"]
+    all_modes = selected_modes
     hyperparameters = {
     "Baseline": {
-        "Q-Learning": dict(gamma=0.95, alpha=0.5, epsilon=1.0, decay_rate=0.999, min_eps=0.05),
-        "SARSA":      dict(gamma=0.95, alpha=0.5, epsilon=1.0, decay_rate=0.999, min_eps=0.05),
+        "Q-Learning": dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
+        "SARSA":      dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
     },
 
     "Finetuned": {
-        "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.02),
-        "SARSA":      dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997,  min_eps=0.02),
+        "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.01),
+        "SARSA":      dict(gamma=0.99, alpha=0.12, epsilon=1.0, decay_rate=0.997,  min_eps=0.01),
     }
     }
     # Dictionary to hold all CSV paths
@@ -225,7 +255,7 @@ def main():
             print(f"\n Starting Mode: {mode}\n")
             
             # Loop through layouts: CliffGauntlet, DoubleCanyon, OpenDesert
-            for layout_name in layout_names:
+            for layout_name in selected_layouts:
                 print(f"\n Starting experiments on layout: {layout_name} \n")
                 csv_paths[(mode, layout_name)] = {}
                 
@@ -236,7 +266,9 @@ def main():
                     # Generate run_id for each run
                     run_id = generate_run_id()
                     
-                    for algo_name, AlgoClass in algos.items():
+                    for algo_name in selected_algos:
+                        AlgoClass = algos[algo_name]
+
                         print(f"\n Training {algo_name.upper()} on {layout_name}:\n")
 
                         # Create fresh env per algo
@@ -249,7 +281,20 @@ def main():
                         os.makedirs(output_dir, exist_ok=True)
                         
                         # Initialize agent with hyperparameters
-                        params = hyperparameters[mode][algo_name]
+                        params = hyperparameters[mode][algo_name].copy()
+                        
+                        # Apply overrides only if provided
+                        if args.gamma is not None:
+                            params["gamma"] = args.gamma
+                        if args.alpha is not None:
+                            params["alpha"] = args.alpha
+                        if args.epsilon is not None:
+                            params["epsilon"] = args.epsilon
+                        if args.decay_rate is not None:
+                            params["decay_rate"] = args.decay_rate
+                        if args.min_eps is not None:
+                            params["min_eps"] = args.min_eps
+                        # Pass parameters to agent
                         agent = AlgoClass(
                             env,
                             gamma=params["gamma"],
@@ -258,7 +303,6 @@ def main():
                             decay_rate=params["decay_rate"],
                             min_eps=params["min_eps"],
                         )
-
                         # Train agent
                         metrics = train(env, agent, num_episodes=args.num_episodes)
                         
@@ -286,8 +330,8 @@ def main():
         csv_paths = defaultdict(dict)
         # Gather CSV files for all modes, layouts, and algorithms
         for mode in all_modes:
-            for layout_name in layout_names:
-                for algo_name in algos.keys():
+            for layout_name in selected_layouts:
+                for algo_name in selected_algos:
                     pattern = os.path.join(args.output, mode, layout_name, algo_name, f"{layout_name}_{algo_name}_metrics.csv")
                     csv_files = sorted(glob.glob(pattern))
                     if csv_files:
