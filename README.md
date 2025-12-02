@@ -12,21 +12,20 @@ It includes:
 
 ## FOLDER STRUCTURE ##
 project/
-│
-├── src/
-│   ├── main.py               # Orchestration 
-│   ├── agents_Q.py           # Q-Learning 
-│   ├── agents_SARSA.py       # SARSA 
-│   ├── custom_envs.py        # Custom ASCII-map envs
-│   ├── analyze.py            # Statistical tests, plots, reports
-│   └── utils.py              # Plotting utilities, video exports
-├── data/
-│   └── {Baseline|Finetuned}/{Layout}/{Algo}/...csv
-├── analysis/
-│   └── {Baseline|Finetuned}/{Layout}/...md + plots
-├── archive/
-│   └── ...                   # Snapshot of final results
-└── requirements.txt
+- src/
+          - main.py               # Orchestration
+          - agents_Q.py           # Q-Learning
+          - agents_SARSA.py       # SARSA
+          - custom_envs.py        # Custom ASCII-map envs
+          - analyze.py            # Statistical tests, plots, reports
+          - utils.py              # Plotting utilities, video exports
+- data/
+         - {Baseline|Finetuned}/{Layout}/{Algo}/...csv # Output path for --train-only
+- analysis/
+         - {Baseline|Finetuned}/{Layout}/...md + plots # Output path for --analysis-only
+- archive/
+         - ...                   # Snapshot of final results
+- requirements.txt
 
 ## GIT ##
 git clone
