@@ -1,11 +1,12 @@
 ## OVERVIEW ##
 This repository implements an experiment on the Gymnasium CliffWalking-v1 task environment to compare two Reinforcement Learning (RL) algorithms, Q-Learning and SARSA, across three custom CliffWalking map layouts (Cliff Gauntlet, Double Canyon, and Open Desert) and two sets of hyperparameters (Baseline and Fine-tuned). The custom environments can be found in the custom_envs.py and the hyperparameters are listed below in the notes. Our overall goal is to test our hypotheses against the expected behaviors of Q-Learning, an off-policy algorithm that prioritizes best action and converges on the optimal path, versus SARSA, an on-policy algorithm that updates on real behaviors of the agent hence converging on the safest path. 
-It includes:
+
+The project includes:
 - Custom environments
 - Training loops
 - Finetuned and baseline hyperparameter modes
 - CSV metric logging for rewards and cliff fall counts
-- Evaluation video recording for .gif
+- Evaluation video recording for .gif 
 - Full statistical analysis pipeline with five hypothesis tests
 - Bootstrap confidence intervals
 - Markdown reports & plots
