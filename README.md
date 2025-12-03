@@ -1,11 +1,12 @@
 ## OVERVIEW ##
-This repository implements a complete experimental framework to compare Q-Learning and SARSA across multiple custom CliffWalking layouts using Gymnasium.
-It includes:
+This repository implements an experiment on the Gymnasium CliffWalking-v1 task environment to compare two Reinforcement Learning (RL) algorithms, Q-Learning and SARSA, across three custom CliffWalking map layouts (Cliff Gauntlet, Double Canyon, and Open Desert) and two sets of hyperparameters (Baseline and Fine-tuned). The custom environments can be found in the custom_envs.py and the hyperparameters are listed below in the notes. Our overall goal is to test our hypotheses against the expected behaviors of Q-Learning, an off-policy algorithm that prioritizes best action and converges on the optimal path, versus SARSA, an on-policy algorithm that updates on real behaviors of the agent hence converging on the safest path. 
+
+The project includes:
 - Custom environments
 - Training loops
 - Finetuned and baseline hyperparameter modes
 - CSV metric logging for rewards and cliff fall counts
-- Evaluation video recording for .gif
+- Evaluation video recording for .gif 
 - Full statistical analysis pipeline with five hypothesis tests
 - Bootstrap confidence intervals
 - Markdown reports & plots
@@ -83,32 +84,22 @@ Higher b → faster learning.
 2) Default Modes & Hyperparameters
 Baseline = what we think the minimal performing config is and provides value to our experiment
 Finetuned = what we think the optimal is and provides value to our experiment
+
 "Baseline": {
-        "Q-Learning": dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
-        "SARSA":      dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
+
+   "Q-Learning": dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
+   
+   "SARSA":      dict(gamma=0.70, alpha=0.5, epsilon=1.0, decay_rate=0.9995, min_eps=0.10),
     },
 
-    "Finetuned": {
-        "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.01),
-        "SARSA":      dict(gamma=0.99, alpha=0.12, epsilon=1.0, decay_rate=0.997,  min_eps=0.01),
+"Finetuned": {
+   
+   "Q-Learning": dict(gamma=0.99, alpha=0.15, epsilon=1.0, decay_rate=0.997, min_eps=0.01),
+   
+   "SARSA":      dict(gamma=0.99, alpha=0.12, epsilon=1.0, decay_rate=0.997,  min_eps=0.01),
     }
 
-3) Notes on Analysis Warnings
-
-During the statistical analysis phase, you may see the following warnings in the console. These are expected behavior given the nature of the experiment and do not indicate failures or errors.
-
-Wilcoxon RuntimeWarning (invalid value encountered)
-This occurs when Q-Learning and SARSA have identical window-level values or when all differences share the same sign (e.g., 0 when we intentionally make the baselines perform poorly). In those cases, the Wilcoxon statistic becomes numerically undefined. The analysis still completes normally, and the interpretation remains valid.
-
-Exponential Fit Overflow Warning
-The exponential decay model used in H3 may overflow when the data shows little or no decay (e.g., baseline agents that do not improve). The curve fitting step then generates overflow warnings, which are harmless and expected for flat or unstable curves.
-
-OptimizeWarning: Covariance Could Not Be Estimated
-This appears when the exponential model parameters cannot be reliably determined—typically when learning is extremely fast (finetuned agents) or nonexistent (baseline agents). The analysis continues using the best-fit values available.
-
-These warnings do not affect report generation, statistical conclusions, or hypothesis test results. They reflect edge cases inherent to reinforcement learning performance curves.
-
-4) How we obtained the data and analysis reports in the archived folder:
+3) How we obtained the data and analysis reports in the archived folder:
 - python src\main.py --num-runs 10 --train-only
 - python src\main.py --analysis-only
 
