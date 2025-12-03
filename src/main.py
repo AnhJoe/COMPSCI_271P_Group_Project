@@ -318,11 +318,11 @@ def main():
                         # Store CSV paths for analysis
                         csv_paths[(mode, layout_name)][algo_name] = csv_path
                         
-                        # # Create and save evaluation video
-                        # video_dir = os.path.join(output_dir, "videos")
-                        # os.makedirs(video_dir, exist_ok=True)
-                        # eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
-                        # submit_video(video_dir)
+                        # Create and save evaluation video
+                        video_dir = os.path.join(output_dir, "videos")
+                        os.makedirs(video_dir, exist_ok=True)
+                        eval_video(env, agent, video_dir, num_videos=args.num_videos, algo_name=algo_name)
+                        submit_video(video_dir)
     # ANALYSIS LOOP
     if not args.train_only:
         print("\nStarting Analysis Phase...\n")

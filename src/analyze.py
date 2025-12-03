@@ -10,6 +10,7 @@ from utils import (
     plot_avg_reward_per_100,
     plot_cliff_fall_rate
 )
+np.seterr(over='ignore', under='ignore', invalid='ignore')
 
 # Exponential decay function for curve fitting
 def expo(t, a, b):
